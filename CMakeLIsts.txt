@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.16)
+project(main)
+
+
+# Try to find OpenCV
+# set(OpenCV_DIR ....)
+find_package(OpenCV 4 REQUIRED)
+
+
+# include has 2 subdirectories: tensorflow and flatbuffers
+# get the folder form https://github.com/muhammedakyuzlu/tensorflow_lite_libs_cpp.git
+INCLUDE_DIRECTORIES("[pathto/yolov5-tflite-cpp/tensorflow_lite_libs_cpp/include]")
+
+# lib has 1 file: libtensorflowlite.so
+ADD_LIBRARY(tensorflowlite SHARED IMPORTED)
+set_property(TARGET tensorflowlite PROPERTY IMPORTED_LOCATION pathto/yolov5-tflite-cpp/tensorflow_lite_libs_cpp/libs/libtensorflowlite.so)
+
+if(NOT TENSORFLOW_SOURCE_DIR)
+  get_filename_component(TENSORFLOW_SOURCE_DIR
+    "${CMAKE_CURRENT_LIST_DIR}/../../../../Downloads/tensorflow-2.4.2"
+    ABSOLUTE
+  )
+endif()
+
+add_subdirectory(
+  "${TENSORFLOW_SOURCE_DIR}/tensorflow/lite"
+  "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite"
+  EXCLUDE_FROM_ALL
+)
+
+file(GLOB SOURCE_FILES src/*.cpp)
+add_executable(${CMAKE_PROJECT_NAME} ${SOURCE_FILES})
+
+target_link_libraries(
+    ${CMAKE_PROJECT_NAME}
+    ${OpenCV_LIBS}
+    tensorflow-lite
+    ${CMAKE_DL_LIBS}
+    pthread
+)
